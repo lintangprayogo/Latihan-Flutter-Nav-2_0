@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latihan_navigation_version_dua/db/auth_repository.dart';
+import 'package:latihan_navigation_version_dua/model/page_configuration.dart';
 import 'package:latihan_navigation_version_dua/model/qoute.dart';
 import 'package:latihan_navigation_version_dua/screen/login_screen.dart';
 import 'package:latihan_navigation_version_dua/screen/qoute_detail_screen.dart';
@@ -7,7 +8,7 @@ import 'package:latihan_navigation_version_dua/screen/qoute_list_screen.dart';
 import 'package:latihan_navigation_version_dua/screen/register_screen.dart';
 import 'package:latihan_navigation_version_dua/screen/splash_screen.dart';
 
-class MyRouterDelegate extends RouterDelegate
+class MyRouterDelegate extends RouterDelegate<PageConfiguration>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin {
   final GlobalKey<NavigatorState> _navigatorKey;
   final AuthRepository authRepository;
@@ -27,6 +28,7 @@ class MyRouterDelegate extends RouterDelegate
   bool? isLoggedIn;
   bool isRegister = false;
   String? selectedQuote;
+  bool? isUnknown;
 
   List<Page> get _splashStack => const [MaterialPage(child: SplashScreen())];
 
@@ -115,5 +117,45 @@ class MyRouterDelegate extends RouterDelegate
   GlobalKey<NavigatorState>? get navigatorKey => _navigatorKey;
 
   @override
-  Future<void> setNewRoutePath(configuration) async {}
+  Future<void> setNewRoutePath(configuration) async {
+    if (configuration.isUnknownPage) {
+      isUnknown = true;
+      isRegister = false;
+    } else if (configuration.isRegisterPage) {
+      isRegister = true;
+    } else if (configuration.isHomePage ||
+        configuration.isLoginPage ||
+        configuration.isSplashPage) {
+      isUnknown = false;
+      selectedQuote = null;
+      isRegister = false;
+    } else if (configuration.isDetailPage) {
+      isUnknown = false;
+      isRegister = false;
+      selectedQuote = configuration.qouteId.toString();
+    } else {
+      print(' Could not set new route');
+    }
+
+    notifyListeners();
+  }
+
+  @override
+  PageConfiguration? get currentConfiguration {
+    if (isLoggedIn == null) {
+      return PageConfiguration.splash();
+    } else if (isRegister == true) {
+      return PageConfiguration.register();
+    } else if (isLoggedIn == false) {
+      return PageConfiguration.login();
+    } else if (isUnknown == true) {
+      return PageConfiguration.unknown();
+    } else if (selectedQuote == null) {
+      PageConfiguration.home();
+    } else if (selectedQuote != null) {
+      return PageConfiguration.detailQuote(selectedQuote ?? "");
+    } else {
+      return PageConfiguration.unknown();
+    }
+  }
 }

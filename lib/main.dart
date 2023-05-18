@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:latihan_navigation_version_dua/db/auth_repository.dart';
 import 'package:latihan_navigation_version_dua/provider/auth_provider.dart';
+import 'package:latihan_navigation_version_dua/routes/my_route_information_parser.dart';
 import 'package:latihan_navigation_version_dua/routes/router_delegate.dart';
 import 'package:provider/provider.dart';
+import 'common/url_strategy.dart';
 
 void main() {
+  usePathUrlStrategy();
   runApp(const QuotesApp());
 }
 
@@ -18,6 +21,7 @@ class QuotesApp extends StatefulWidget {
 class _QuotesAppState extends State<QuotesApp> {
   late MyRouterDelegate myRouterDelegate;
   late AuthProvider authProvider;
+  late MyRouteInformationParser myRouteInformationParser;
 
   @override
   void initState() {
@@ -27,18 +31,19 @@ class _QuotesAppState extends State<QuotesApp> {
     myRouterDelegate = MyRouterDelegate(authRepository);
 
     authProvider = AuthProvider(authRepository);
+    myRouteInformationParser = MyRouteInformationParser();
   }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => authProvider,
-      child: MaterialApp(
-          title: 'Quotes App',
-          home: Router(
-            routerDelegate: myRouterDelegate,
-            backButtonDispatcher: RootBackButtonDispatcher(),
-          )),
+      child: MaterialApp.router(
+        title: 'Quotes App',
+        routerDelegate: myRouterDelegate,
+        routeInformationParser: myRouteInformationParser,
+        backButtonDispatcher: RootBackButtonDispatcher(),
+      ),
     );
   }
 }
